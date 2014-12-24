@@ -83,15 +83,15 @@ function FixedUpdate() {
 
 
    // torque velocity, pitch
-   speedPitch = heloTorque.x;
+   speedPitch = heloTorque.x * -1 * Mathf.Rad2Deg;
 
 
    // torque velocity, roll
-   speedRoll = heloTorque.z;
+   speedRoll = heloTorque.z * -1 * Mathf.Rad2Deg;
 
 
    // torque velocity, yaw
-   speedYaw = heloTorque.y;
+   speedYaw = heloTorque.y * -1 * Mathf.Rad2Deg;
 
 
    /**

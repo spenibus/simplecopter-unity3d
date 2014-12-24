@@ -11,8 +11,9 @@ public var flightModelSimple : boolean = false;
 helicopter specs
 force = mass * acceleration
 **/
-private var enginePower  : float =  9.81 * 1000;         // just enough to hover
-private var engineTorque : float =  180 * Mathf.Deg2Rad; // deg/sec to turn around
+private var bodyMass     : float = 1000;
+private var enginePower  : float = 9.81 * bodyMass;     // just enough to hover
+private var engineTorque : float = 180 * Mathf.Deg2Rad; // deg/sec to turn around
 
 
 // swashplate (cyclic control)
@@ -206,24 +207,13 @@ function FixedUpdate() {
       /**
       swashplate
       **/
-      print(heloControl.controlPitch+"   "+heloControl.controlRoll);
+      var controlPitch = heloControl.controlPitch;
+      var controlRoll  = heloControl.controlRoll;
 
 
-      //var controlPitch = Mathf.Clamp(controlPitch + inputPitch, -1, 1);
-      //var controlRoll  = Mathf.Clamp(controlRoll  + inputRoll,  -1, 1);
-
-
-//print(heloControl.controlPitch+"   "+heloControl.controlRoll);
-
-
-/*
-
-      // exposed, square
-      //controlPitch *= Mathf.Abs(controlPitch);
-      //controlRoll  *= Mathf.Abs(controlRoll);
-
-      var controlPitch = heloControl.controlPitch * Mathf.Abs(heloControl.controlPitch);
-      var controlRoll  = heloControl.controlRoll  * Mathf.Abs(heloControl.controlRoll);
+      // square
+      controlPitch = controlPitch * Mathf.Abs(controlPitch);
+      controlRoll  = controlRoll  * Mathf.Abs(controlRoll);
 
 
       // pitch
@@ -234,7 +224,7 @@ function FixedUpdate() {
       // roll
       swashplatePowerLeft  += swashplateCyclicMax * controlRoll;
       swashplatePowerRight += swashplateCyclicMax * controlRoll * -1;
-*/
+
 
 
 
@@ -247,9 +237,11 @@ function FixedUpdate() {
       **/
 
 
+
+
       // default stabilizer values, 0.01 per degree
-      var stabilizerPitch : float = heloFlightData.pitch / -100;
-      var stabilizerRoll  : float = heloFlightData.roll  / -100;
+      var stabilizerPitch : float = 0; // heloFlightData.pitch / -100;
+      var stabilizerRoll  : float = 0; // heloFlightData.roll  / -100;
 
 
       // stabilizer effect range
@@ -257,39 +249,183 @@ function FixedUpdate() {
       var stabilizerRangeMax : float =  0.9;
 
 
-      var stabilizerDir    : float = 0;
-      var stabilizerDiff   : float = 0;
-      var stabilizerTorque : float = 0;
-      var stabilizerTime   : float = 0;
-      var tmp              : float = 0;
+      var stabilizerDir       : float = 0;
+      var stabilizerDiff      : float = 0;
+      var stabilizerTorque    : float = 0;
+      var stabilizerTime      : float = 0;
+      var stabilizerTorqueMax : float = 0;
 
 
-      // stabilize pitch
-      if(heloControl.controlPitch >= stabilizerRangeMin && heloControl.controlPitch <= stabilizerRangeMax) {
-
-         // pitch direction, -1 is forward, 1 is backward
-         stabilizerDir = heloControl.controlPitch != 0
-            ? heloControl.controlPitch / Mathf.Abs(heloControl.controlPitch)
-            : 0;
-
-         // difference between desired AOA (from cyclic input) and actual AOA
-         // positive difference means we have not yet reach target AOA
-         // negative difference means we have gone too far
-         stabilizerDiff = (heloControl.controlPitch - heloFlightData.pitch / 100) * stabilizerDir;
-
-         // torque speed in current direction in deg/sec
-         stabilizerTorque = heloFlightData.speedPitch * stabilizerDir * -1 * Mathf.Rad2Deg;
-
-         // time to reach target AOA at current torque
-         stabilizerTime = stabilizerTorque != 0
-            ? stabilizerDiff/stabilizerTorque
-            : 0;
 
 
-         tmp = (heloControl.controlPitch + stabilizerPitch) * stabilizerDir;
-         if(tmp < 0) {
-            //stabilizerPitch = heloControl.controlPitch * -1;
-         }
+      /**
+      stabilize pitch
+      **/
+
+
+      // difference between current pitch and target pitch in deg/s
+      var pitchDiff          : float = heloControl.controlPitch * 100 - heloFlightData.pitch;
+      var pitchDiffStrength  : float = pitchDiff != 0 ? Mathf.Abs(pitchDiff) : 0;
+      var pitchDiffDirection : float = pitchDiff != 0 ? pitchDiff / pitchDiffStrength : 1;
+
+
+      // current torque, deg/s
+      var pitchTorque          : float = heloFlightData.speedPitch;
+      var pitchTorqueStrength  : float = pitchTorque != 0 ? Mathf.Abs(pitchTorque) : 0;
+      var pitchTorqueDirection : float = pitchTorque != 0 ? pitchTorque / pitchTorqueStrength : 1;
+
+
+      // time to reach target pitch at current torque
+      // negative means overshoot
+      var pitchTimeTarget : float = pitchTorque != 0 ? pitchDiff / pitchTorque : 999;
+
+
+      // maximum rotor torque in m/s
+      var rotorTorqueMax : float = enginePower / bodyMass * swashplateCyclicMax;
+
+
+      // maximum rotor torque in deg/s (rotor point of effect is 0.75m from center)
+      rotorTorqueMax = rotorTorqueMax / 0.75 * Mathf.Rad2Deg;
+
+
+      // how much time to kill current torque
+      var pitchTimeKill : float = pitchTorqueStrength / rotorTorqueMax;
+
+
+      // time left after accounting for torque kill
+      var pitchTimeLeft : float = pitchTimeTarget - pitchTimeKill;
+
+
+
+
+      // time left is under 100ms, time to kill torque
+      if(pitchTimeLeft < 0.1) {
+/*
+         // add torque correction
+         stabilizerPitch += pitchTorqueStrength/rotorTorqueMax;
+
+         // square correction to match cyclic input
+         stabilizerPitch *= Mathf.Abs(stabilizerPitch);
+*/
+         // cancel input
+         stabilizerPitch += heloControl.controlPitch;
+
+         // square correction to match cyclic input
+         stabilizerPitch *= Mathf.Abs(stabilizerPitch);
+
+         // invert
+         stabilizerPitch *= pitchDiffDirection * -1;
+
+
+
+/*
+
+*/
+
+print("------");
+//print(pitchTorqueStrength+"/"+rotorTorqueMax);
+print(heloControl.controlPitch);
+print(stabilizerPitch);
+
+         // how much pitch units to produce adequate counter torque
+         //var zzz = pitchTorqueStrength / rotorTorqueMax * pitchTorqueDirection * -1;
+      }
+
+
+
+
+
+
+
+
+/*
+      // NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+      // stuff is wrong like time
+
+      // pitch direction, -1 is forward, 1 is backward
+      stabilizerDir = heloControl.controlPitch != 0
+         ? heloControl.controlPitch / Mathf.Abs(heloControl.controlPitch)
+         : 0;
+
+      // difference between desired AOA (from cyclic input) and actual AOA
+      // positive difference means we have not yet reach target AOA
+      // negative difference means we have gone too far
+      stabilizerDiff = (heloControl.controlPitch - heloFlightData.pitch / 100) * stabilizerDir;
+
+      // torque speed in current direction in deg/sec
+      stabilizerTorque = heloFlightData.speedPitch * stabilizerDir * -1 * Mathf.Rad2Deg;
+      //print("torque: "+stabilizerTorque);
+
+      // time to reach target AOA at current torque
+      stabilizerTime = stabilizerTorque != 0
+         ? stabilizerDiff/stabilizerTorque
+         : 0;
+      //print("time to reach: "+stabilizerTime);
+
+
+   how much counter torque can be produced
+   enginePower / mass = torque m/s
+   torque rotorRadius
+
+   2 * PI * rad / s = 360deg/s
+
+   2 PI R = circumference = 360deg
+
+   2 PI R / torque (m/s) = time
+
+
+   pow / mass * plateMax
+      9.81
+
+
+
+
+
+
+
+
+      // time left when accounted for torque kill time
+      var timeMargin = stabilizerTime - timeToKill;
+      //print("time margin: "+timeMargin);
+
+
+
+
+      // we have more than enough time to stop
+      if(timeMargin > 0) {
+
+      }
+      // not enough time to stop
+      else {
+         stabilizerPitch = stabilizerTorque / stabilizerTorqueMax * stabilizerDir;
+print(stabilizerTorque+" / "+stabilizerTorqueMax);
+
+      }
+
+      produce counter torque such as torque can be killed off right in time to reach AOA
+      we know the torque and how much time until AOA is reached
+      we know how much power we can put into anti torque
+      */
+
+
+
+
+
+
+
+
+
+/*
+      // AOA reached, kill the torque
+      if(stabilizerDiff < 0) {
+         stabilizerPitch = heloControl.controlPitch * -1;
+      }
+print("pitch: "+stabilizerPitch);
+print("dir: "+stabilizerDir+"   diff: "+stabilizerDiff+"   torque: "+stabilizerTorque+"   time: "+stabilizerTime);
+*/
+
+
+      //if(heloControl.controlPitch >= stabilizerRangeMin && heloControl.controlPitch <= stabilizerRangeMax) {
 
 
 
@@ -314,38 +450,25 @@ function FixedUpdate() {
 
             knowing our current ang spd and how much time before reaching target aoa
             we should produce a counter force that makes final speed fall within expected margins
-
-
          */
 
-         //0.03
-
-
-
-         //print(stabilizerDiff);
 
 
 
 
-         // slow down torque when close to target AOA
+
+
+
+
+
+
+
+
+
 
 
 
 /*
-         //MEEEEEEEEEH
-         // the more we go over the target AOA the stronger we push back
-         if(stabilizerDiff < 0) {
-
-            stabilizerPitch = stabilizerTorque / 10;
-            stabilizerPitch *= stabilizerPitch;
-            stabilizerPitch *= stabilizerDir * -1;
-
-            print(stabilizerTorque+"   "+stabilizerPitch);
-         }
-*/
-      }
-
-
       // stabilize roll
       if(heloControl.controlRoll >= stabilizerRangeMin && heloControl.controlRoll <= stabilizerRangeMax) {
 
@@ -382,34 +505,37 @@ function FixedUpdate() {
             //stabilizerRoll += stabilizerTorque * -0.05 * stabilizerDir;
          }
       }
+*/
 
 
-      // clamp stabilizer
-      stabilizerPitch = Mathf.Clamp(
-         stabilizerPitch,
-         swashplateCollectiveMin,
-         swashplateCollectiveMax
-      );
-      stabilizerRoll = Mathf.Clamp(
-         stabilizerRoll,
-         swashplateCollectiveMin,
-         swashplateCollectiveMax
-      );
 
-
+/*
       // square correction to match cyclic input
       stabilizerPitch *= Mathf.Abs(stabilizerPitch);
       stabilizerRoll  *= Mathf.Abs(stabilizerRoll);
+*/
 
+      // clamp stabilizer within limits (twice cyclic to allow max cancel)
+      stabilizerPitch = Mathf.Clamp(
+         stabilizerPitch,
+         swashplateCyclicMax * -2,
+         swashplateCyclicMax *  2
+      );
+      stabilizerRoll = Mathf.Clamp(
+         stabilizerRoll,
+         swashplateCyclicMax * -2,
+         swashplateCyclicMax *  2
+      );
 
+print(swashplatePowerFront);
       // apply stabilizer correction, pitch
-      swashplatePowerFront += swashplateCyclicMax * stabilizerPitch;
-      swashplatePowerBack  += swashplateCyclicMax * stabilizerPitch * -1;
-
+      swashplatePowerFront += stabilizerPitch;
+      swashplatePowerBack  += stabilizerPitch * -1;
+print(swashplatePowerFront);
 
       // apply stabilizer correction, roll
-      swashplatePowerLeft  += swashplateCyclicMax * stabilizerRoll;
-      swashplatePowerRight += swashplateCyclicMax * stabilizerRoll * -1;
+      swashplatePowerLeft  += stabilizerRoll;
+      swashplatePowerRight += stabilizerRoll * -1;
    }
 
 
@@ -435,12 +561,9 @@ possibly violently.
 
 
    /**
-   lift power
-   here we calculate how much lift we have
+   lift power: base
+   here we calculate how much lift we have from the engine
    **/
-
-
-   // base lift power
    var liftPower : float = enginePower;
 
 
@@ -448,7 +571,7 @@ possibly violently.
 
 
    /**
-   ground effect (cushion)
+   lift power: ground effect (cushion)
    + 0% at 1 rotor height
    +20% at 0 rotor height
       TODO: apply to all surfaces, not just ground, given sufficient area
@@ -462,7 +585,7 @@ possibly violently.
 
 
    /**
-   effective translational lift
+   lift power: effective translational lift
    +10% lift at 20m/s and beyond (horizontal speed)
    **/
    var etlPowerFactor : float = heloFlightData.speedHorizontal / 20;
@@ -474,7 +597,7 @@ possibly violently.
 
 
    /**
-   apply lift force and swashplate action
+   apply lift power and swashplate action
    **/
    helo.rigidbody.AddForceAtPosition(
       swashplateFront.up * liftPower/4 * swashplatePowerFront,
