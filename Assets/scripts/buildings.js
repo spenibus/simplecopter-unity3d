@@ -13,22 +13,24 @@ function Start () {
    for(x=-200; x<200; x+=20) {
       for(z=-50; z<350; z+=20) {
 
-         var height : int = Random.Range(2,40);
+         var height : int = Random.Range(2,80);
 
          var prefabBuilding = GameObject.CreatePrimitive(PrimitiveType.Cube);
          prefabBuilding.transform.position = Vector3(
             x + Random.Range(-4,4),
-            0+height/2,
+            Random.Range(0, height),
             z + Random.Range(-4,4)
          );
 
          prefabBuilding.transform.localScale += Vector3(
-            Random.Range(4,8),
+            Random.Range(3,9),
             height,
-            Random.Range(4,8)
+            Random.Range(6,15)
          );
 
-         prefabBuilding.transform.localRotation.eulerAngles.y = Random.Range(0,90);
+         prefabBuilding.transform.localRotation.eulerAngles.x = Random.value > 0.5 ? 0 : 90;
+         prefabBuilding.transform.localRotation.eulerAngles.y = Random.value > 0.5 ? 0 : 90;
+
       }
    }
 

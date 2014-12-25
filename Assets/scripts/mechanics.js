@@ -161,7 +161,7 @@ function FixedUpdate() {
    **/
    helo.rigidbody.AddRelativeTorque(Vector3(
       0.0,
-      engineTorque * heloControl.controlYaw,
+      engineTorque * heloControl.controlYaw * Mathf.Abs(heloControl.controlYaw),
       0.0
    ), ForceMode.Acceleration);
 
@@ -199,13 +199,13 @@ function FixedUpdate() {
    swashplate emulation
    raises/lowers swashplate points depending on input
    inputs are squared for finer control
-   needs stabilization
    **/
    else {
 
 
       /**
-      swashplate
+      swashplate, cyclic input
+      stick position indicates target pitch and max torque speed
       **/
       var controlPitch = heloControl.controlPitch;
       var controlRoll  = heloControl.controlRoll;
@@ -222,19 +222,65 @@ function FixedUpdate() {
 
 
       // roll
-      swashplatePowerLeft  += swashplateCyclicMax * controlRoll;
-      swashplatePowerRight += swashplateCyclicMax * controlRoll * -1;
+      //swashplatePowerLeft  += swashplateCyclicMax * controlRoll;
+      //swashplatePowerRight += swashplateCyclicMax * controlRoll * -1;
 
 
 
 
       /**
       stabilizer
-      this makes the cyclic input target a specific angle of attack (pitch/roll)
+      tuned to specs
+      **/
+
+
+      // target pitch/roll in degrees
+      var pitchTarget = controlPitch * 100;
+      var rollTarget  = controlRoll  * 100;
+
+
+      // default stabilizer values, 0.01 per degree
+      var stabilizerPitch : float = 0; // heloFlightData.pitch / -100;
+      var stabilizerRoll  : float = 0; // heloFlightData.roll  / -100;
+
+
+      var stabilizerTorqueMax : float = 90; // deg/s, max correction speed
+
+
+      // current torque, deg/s
+      var pitchTorque : float = heloFlightData.speedPitch;
+
+
+      if(pitchTorque > stabilizerTorqueMax) {
+         stabilizerPitch = controlPitch * -1;
+         print(stabilizerPitch);
+      }
+      else if(
+         (pitchTarget < 0 && heloFlightData.pitch < pitchTarget)
+         ||
+         (pitchTarget > 0 && heloFlightData.pitch > pitchTarget)
+      ) {
+         stabilizerPitch = controlPitch * -1;
+         print("over");
+      }
+
+
+
+
+//print(pitchTarget);
+//print(pitchDiff+"   "+pitchDiffStrength+"   "+pitchDiffDirection);
+
+
+
+      /**
+      stabilizer
+      this works in 2 parts
+      1. we limit pitch/roll to a maximum torque speed
+      2. we make the cyclic input target a specific angle of attack (pitch/roll)
       then returns the swashplate to neutral position to maintain the angle
       0.01 unit of cyclic input is 1 degree
       affected range is -0.9/0.9 of the cyclic stick
-      **/
+      **
 
 
 
@@ -260,7 +306,7 @@ function FixedUpdate() {
 
       /**
       stabilize pitch
-      **/
+      **
 
 
       // difference between current pitch and target pitch in deg/s
@@ -300,13 +346,13 @@ function FixedUpdate() {
 
       // time left is under 100ms, time to kill torque
       if(pitchTimeLeft < 0.1) {
-/*
+
          // add torque correction
          stabilizerPitch += pitchTorqueStrength/rotorTorqueMax;
 
          // square correction to match cyclic input
          stabilizerPitch *= Mathf.Abs(stabilizerPitch);
-*/
+
          // cancel input
          stabilizerPitch += heloControl.controlPitch;
 
@@ -318,10 +364,6 @@ function FixedUpdate() {
 
 
 
-/*
-
-*/
-
 print("------");
 //print(pitchTorqueStrength+"/"+rotorTorqueMax);
 print(heloControl.controlPitch);
@@ -330,6 +372,8 @@ print(stabilizerPitch);
          // how much pitch units to produce adequate counter torque
          //var zzz = pitchTorqueStrength / rotorTorqueMax * pitchTorqueDirection * -1;
       }
+
+/**/
 
 
 
@@ -514,7 +558,7 @@ print("dir: "+stabilizerDir+"   diff: "+stabilizerDiff+"   torque: "+stabilizerT
       stabilizerPitch *= Mathf.Abs(stabilizerPitch);
       stabilizerRoll  *= Mathf.Abs(stabilizerRoll);
 */
-
+/**
       // clamp stabilizer within limits (twice cyclic to allow max cancel)
       stabilizerPitch = Mathf.Clamp(
          stabilizerPitch,
@@ -527,11 +571,13 @@ print("dir: "+stabilizerDir+"   diff: "+stabilizerDiff+"   torque: "+stabilizerT
          swashplateCyclicMax *  2
       );
 
-print(swashplatePowerFront);
+/**/
+
+
       // apply stabilizer correction, pitch
       swashplatePowerFront += stabilizerPitch;
       swashplatePowerBack  += stabilizerPitch * -1;
-print(swashplatePowerFront);
+
 
       // apply stabilizer correction, roll
       swashplatePowerLeft  += stabilizerRoll;
