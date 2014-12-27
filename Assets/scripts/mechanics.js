@@ -185,9 +185,9 @@ function FixedUpdate() {
    if(flightModelSimple) {
 
       helo.Rotate(Vector3(
-         heloControl.controlPitch * -2,
+         heloControl.controlPitch * -1,
          0.0,
-         heloControl.controlRoll * -2
+         heloControl.controlRoll * -1
       ));
    }
 
@@ -205,7 +205,7 @@ function FixedUpdate() {
 
       /**
       swashplate, cyclic input
-      stick position indicates target pitch and max torque speed
+      stick position controls swashplate tilt
       **/
       var controlPitch = heloControl.controlPitch;
       var controlRoll  = heloControl.controlRoll;
@@ -234,15 +234,34 @@ function FixedUpdate() {
       **/
 
 
-      // target pitch/roll in degrees
-      var pitchTarget = controlPitch * 100;
-      var rollTarget  = controlRoll  * 100;
-
-
       // default stabilizer values, 0.01 per degree
       var stabilizerPitch : float = 0; // heloFlightData.pitch / -100;
       var stabilizerRoll  : float = 0; // heloFlightData.roll  / -100;
 
+
+
+
+
+
+
+
+      stabilizerPitch = heloFlightData.pitch / -100;
+      stabilizerRoll  = heloFlightData.roll  / -100;
+
+      // square correction to match cyclic input
+      if(stabilizerPitch != 0){
+         stabilizerPitch = stabilizerPitch/Mathf.Abs(stabilizerPitch) * Mathf.Sqrt(Mathf.Abs(stabilizerPitch));
+      }
+
+print(controlPitch+"   "+stabilizerPitch);
+
+
+
+
+/**
+      // target pitch/roll in degrees
+      var pitchTarget = controlPitch * 100;
+      var rollTarget  = controlRoll  * 100;
 
       var stabilizerTorqueMax : float = 90; // deg/s, max correction speed
 
@@ -263,7 +282,7 @@ function FixedUpdate() {
          stabilizerPitch = controlPitch * -1;
          print("over");
       }
-
+/**/
 
 
 

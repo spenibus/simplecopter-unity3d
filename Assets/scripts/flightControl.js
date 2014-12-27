@@ -11,12 +11,12 @@ private var key_yaw_left        : String = "a";
 
 
 // mouse sensitivity, factor
-private var mouseSensitivityX : float = 0.1;
-private var mouseSensitivityY : float = 0.1;
+private var mouseSensitivityX : float = 0.25;
+private var mouseSensitivityY : float = 0.25;
 
 
 // mouse dead zone
-private var mouseDeadZone : float = 0.0;
+private var mouseDeadZone : float = 0.02;
 
 
 // controls
