@@ -16,6 +16,10 @@ private var heloFlightData : flightData;
 private var heloMechanics : mechanics;
 
 
+// flight mechanics
+private var heloFlightControl : flightControl;
+
+
 // hud elements
 private var hud_cam        : Transform;
 private var hud_light      : Transform;
@@ -35,6 +39,7 @@ private var hud_vspeed_reader : TextMesh;
 
 
 private var flightModelText : UI.Text;
+private var inputMethodText : UI.Text;
 
 
 // original position/rotation of hud objects
@@ -61,6 +66,10 @@ function Start() {
 
    // get flight data
    heloFlightData = GameObject.Find("helo").transform.GetComponent(flightData);
+
+
+   // get flight control
+   heloFlightControl = GameObject.Find("helo").transform.GetComponent(flightControl);
 
 
    /**
@@ -94,6 +103,7 @@ function Start() {
 
    // get flight model text component
    flightModelText = GameObject.Find("overlayText").Find("flightModel").GetComponent(UI.Text);
+   inputMethodText = GameObject.Find("overlayText").Find("inputMethod").GetComponent(UI.Text);
 
 
    // original pos/rotation of hud objects
@@ -120,7 +130,7 @@ function Update() {
    hud_pitch_reader.text  = heloFlightData.pitch.ToString("000.00") + " PITCH";
    hud_roll_reader.text   = heloFlightData.roll.ToString("000.00")  + " ROLL ";
    hud_alt_reader.text    = "ALT "  + heloFlightData.altitude.ToString("0000.00");
-   hud_speed_reader.text  = "SPD "  + heloFlightData.speed.ToString("000.00");
+   hud_speed_reader.text  = "SPD "  + heloFlightData.speedHorizontal.ToString("000.00");
    hud_vspeed_reader.text = "VSPD " + heloFlightData.speedVertical.ToString("000.00");
 
 
@@ -128,7 +138,7 @@ function Update() {
 
    // update flight model text
    flightModelText.text = "flight model:\n"+(heloMechanics.flightModelSimple ? 'simple' : 'advanced');
-
+   inputMethodText.text = "input method:\n"+(heloFlightControl.useMouse ? 'mouse' : 'joystick');
 
 
 

@@ -3,20 +3,15 @@
 
 
 
+// inputMethod
+public var useMouse : boolean = true;
+
+
 // key bindings
 private var key_collective_up   : String = "w";
 private var key_collective_down : String = "s";
 private var key_yaw_right       : String = "d";
 private var key_yaw_left        : String = "a";
-
-
-// mouse sensitivity, factor
-private var mouseSensitivityX : float = 0.25;
-private var mouseSensitivityY : float = 0.25;
-
-
-// mouse dead zone
-private var mouseDeadZone : float = 0.02;
 
 
 // controls
@@ -45,10 +40,15 @@ function FixedUpdate() {
 
 
    // restart the game on enter key
-   if(Input.GetKey("r")) {
+   if(Input.GetKeyDown("r")) {
       Application.LoadLevel(Application.loadedLevel);
    }
 
+
+   // switch input method
+   if(Input.GetKeyDown("i")) {
+      useMouse = !useMouse;
+   }
 
 
 
@@ -57,20 +57,32 @@ function FixedUpdate() {
    forward/back = -1/1
    left/right   = -1/1
    **/
-   var inputRoll  : float = Input.GetAxis("Mouse X") * mouseSensitivityX;
-   var inputPitch : float = Input.GetAxis("Mouse Y") * mouseSensitivityY * -1;
+   var inputRoll  : float = 0;
+   var inputPitch : float = 0;
 
-   // real values
-   controlPitchReal = Mathf.Clamp(controlPitchReal + inputPitch, -1, 1);
-   controlRollReal  = Mathf.Clamp(controlRollReal  + inputRoll,  -1, 1);
 
-   // copy real to exposed
-   controlPitch = controlPitchReal;
-   controlRoll  = controlRollReal;
+   // mouse
+   if(useMouse) {
+      controlRoll  = Mathf.Clamp(Input.GetAxis("Mouse X"),      -1, 1);
+      controlPitch = Mathf.Clamp(Input.GetAxis("Mouse Y") * -1, -1, 1);
+/*
+      inputRoll  = Input.GetAxis("Mouse X");
+      inputPitch = Input.GetAxis("Mouse Y") * -1;
 
-   // exposed, deadzone
-   controlPitch = Mathf.Abs(controlPitch) >= mouseDeadZone ? controlPitch : 0;
-   controlRoll  = Mathf.Abs(controlRoll)  >= mouseDeadZone ? controlRoll  : 0;
+      // real values
+      controlRollReal  = Mathf.Clamp(controlRollReal  + inputRoll,  -1, 1);
+      controlPitchReal = Mathf.Clamp(controlPitchReal + inputPitch, -1, 1);
+
+      // copy real to exposed
+      controlRoll  = controlRollReal;
+      controlPitch = controlPitchReal;
+*/
+   }
+   // joystick
+   else {
+      controlRoll  = Input.GetAxis("Horizontal");
+      controlPitch = Input.GetAxis("Vertical");
+   }
 
 
 

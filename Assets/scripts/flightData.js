@@ -71,11 +71,18 @@ function FixedUpdate() {
 
 
    // speed (forward)
-   speed = heloVeloLocal.z;
+   // WRONG, this should not depend on pitch
+   speed = 999;
+   /*
+       var locVel = transform.InverseTransformDirection(rigidbody.velocity);
+      locVel.z = MovSpeed;
+      rigidbody.velocity = transform.TransformDirection(locVel);
+   */
+   //heloVeloLocal.z;
 
 
    // speed (horizontal)
-   speedHorizontal = Vector3(heloVeloLocal.x, 0, heloVeloLocal.z).magnitude;
+   speedHorizontal = Vector3(heloVelo.x, 0, heloVelo.z).magnitude;
 
 
    // speed (vertical)

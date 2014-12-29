@@ -1497,6 +1497,7 @@ RectTransform:
   m_Children:
   - {fileID: 1922281742}
   - {fileID: 176396018}
+  - {fileID: 2097182949}
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_AnchorMin: {x: 0, y: 0}
@@ -1801,7 +1802,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 5, y: -5}
-  m_SizeDelta: {x: 200, y: 100}
+  m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1922281743
 MonoBehaviour:
@@ -1834,7 +1835,9 @@ MonoBehaviour:
 
     R to restart
 
-    F to switch flight model'
+    F to switch flight model
+
+    I to switch between mouse and joystick'
 --- !u!222 &1922281744
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1944,6 +1947,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f54f9b4239883942b932b85018a6b45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useMouse: 1
   controlPitchReal: 0
   controlRollReal: 0
   controlPitch: 0
@@ -1982,7 +1986,7 @@ Rigidbody:
   m_GameObject: {fileID: 2089178232}
   serializedVersion: 2
   m_Mass: 1000
-  m_Drag: .25
+  m_Drag: .200000003
   m_AngularDrag: .5
   m_UseGravity: 1
   m_IsKinematic: 0
@@ -2000,7 +2004,73 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61b284a933babcc448b2bdc2741211f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  flightModelSimple: 0
+  flightModelSimple: 1
+--- !u!1 &2097182946
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 224: {fileID: 2097182949}
+  - 222: {fileID: 2097182948}
+  - 114: {fileID: 2097182947}
+  m_Layer: 5
+  m_Name: inputMethod
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2097182947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2097182946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 708705254, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 16
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 6
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: 
+--- !u!222 &2097182948
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2097182946}
+--- !u!224 &2097182949
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2097182946}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1663985259}
+  m_RootOrder: 2
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 5, y: 40}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0, y: 0}
 --- !u!1 &2115438025
 GameObject:
   m_ObjectHideFlags: 0
